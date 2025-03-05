@@ -34,7 +34,7 @@
 
         // Register the Service Worker
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('firebase-messaging-sw.js') // Correct path
+            navigator.serviceWorker.register('/fcmtest/firebase-messaging-sw.js')
                 .then((registration) => {
                     console.log('Service Worker registered with scope:', registration.scope);
 
@@ -46,7 +46,11 @@
                                 console.log('Notification permission granted.');
 
                                 // Get the token
-                                const currentToken = await getToken(messaging, { vapidKey: 'BASSE8oRvBWr-P7e7F-ofSQb6KN4D7MtLKdnU9KxP1RIgaF7bEFbUbPIwyRQb8uuIrimYONHjTjGitjyFzSt8mU' });
+                                const currentToken = await getToken(messaging, {
+                                    vapidKey: 'BASSE8oRvBWr-P7e7F-ofSQb6KN4D7MtLKdnU9KxP1RIgaF7bEFbUbPIwyRQb8uuIrimYONHjTjGitjyFzSt8mU',
+                                    serviceWorkerRegistration: registration // Use the registered Service Worker
+                                });
+
                                 if (currentToken) {
                                     console.log('Token:', currentToken);
                                     document.getElementById('token').innerText = 'Token: ' + currentToken;
