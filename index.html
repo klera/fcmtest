@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Push Notifications</title>
+    <!-- Firebase Compatibility Builds -->
+    <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-messaging-compat.js"></script>
+</head>
+<body>
+    <h1>Firebase Push Notifications</h1>
+    <button id="request-permission">Request Permission</button>
+    <p id="token"></p>
+
+    <script>
+        // Your web app's Firebase configuration
+
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCF7GLPK0n1sIzQmiAulzSaj7A8bOa7KOU",
+  authDomain: "busferdriver.firebaseapp.com",
+  projectId: "busferdriver",
+  storageBucket: "busferdriver.firebasestorage.app",
+  messagingSenderId: "832059599533",
+  appId: "1:832059599533:web:6c9f2f30d516a8360df424",
+  measurementId: "G-KBP5YW9D8N"
+};
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+
+        // Initialize Firebase Cloud Messaging
+        const messaging = firebase.messaging();
+
+        // Request permission for notifications
+        document.getElementById('request-permission').addEventListener('click', () => {
+            Notification.requestPermission().then((permission) => {
+                if (permission === 'granted') {
+                    console.log('Notification permission granted.');
+                    // Get the token
+                    messaging.getToken({ vapidKey: 'YOUR_VAPID_KEY' }).then((currentToken) => {
+                        if (currentToken) {
+                            console.log('Token:', currentToken);
+                            document.getElementById('token').innerText = 'Token: ' + currentToken;
+                            // Send the token to your server
+                            sendTokenToServer(currentToken);
+                        } else {
+                            console.log('No registration token available. Request permission to generate one.');
+                        }
+                    }).catch((err) => {
+                        console.log('An error occurred while retrieving token. ', err);
+                    });
+                } else {
+                    console.log('Unable to get permission to notify.');
+                }
+            });
+        });
+
+        // Function to send the token to your server
+        function sendTokenToServer(token) {
+            // You can use fetch or XMLHttpRequest to send the token to your server
+            console.log('Sending token to server...');
+            // Example using fetch:
+            fetch('/save-token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token: token }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Handle incoming messages
+        messaging.onMessage((payload) => {
+            console.log('Message received. ', payload);
+            // Display the message in the UI
+            const notificationTitle = payload.notification.title;
+            const notificationOptions = {
+                body: payload.notification.body,
+                icon: payload.notification.icon
+            };
+            new Notification(notificationTitle, notificationOptions);
+        });
+    </script>
+</body>
+</html>
