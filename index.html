@@ -34,7 +34,7 @@
 
         // Register the Service Worker
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/fcmtest/firebase-messaging-sw.js') // Correct path
+            navigator.serviceWorker.register('firebase-messaging-sw.js') // Correct path
                 .then((registration) => {
                     console.log('Service Worker registered with scope:', registration.scope);
 
