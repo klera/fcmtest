@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Push Notifications</title>
+</head>
+<body>
+    <h1>Firebase Push Notifications - Kler acc</h1>
+    <button id="request-permission">Request Permission</button>
+    <p id="token"></p>
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js';
+        import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-messaging.js';
+
+        // Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCF7GLPK0n1sIzQmiAulzSaj7A8bOa7KOU",
+  authDomain: "busferdriver.firebaseapp.com",
+  projectId: "busferdriver",
+  storageBucket: "busferdriver.firebasestorage.app",
+  messagingSenderId: "832059599533",
+  appId: "1:832059599533:web:6c9f2f30d516a8360df424",
+  measurementId: "G-KBP5YW9D8N"
+};
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+
+        // Initialize Firebase Messaging
+        const messaging = getMessaging(app);
+
+        // Register the Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/fcmtest/firebase-messaging-sw.js')
+                .then((registration) => {
+                    console.log('Service Worker registered with scope:', registration.scope);
+
+                    // Request permission for notifications
+                    document.getElementById('request-permission').addEventListener('click', async () => {
+                        try {
+                            const permission = await Notification.requestPermission();
+                            if (permission === 'granted') {
+                                console.log('Notification permission granted.');
+
+                                // Get the token
+                                const currentToken = await getToken(messaging, {
+                                    vapidKey: 'BASSE8oRvBWr-P7e7F-ofSQb6KN4D7MtLKdnU9KxP1RIgaF7bEFbUbPIwyRQb8uuIrimYONHjTjGitjyFzSt8mU',
+                                    serviceWorkerRegistration: registration // Use the registered Service Worker
+                                });
+
+                                if (currentToken) {
+                                    console.log('Token:', currentToken);
+                                    document.getElementById('token').innerText = 'Token: ' + currentToken;
+
+                                    // Send the token to your server
+                                    sendTokenToServer(currentToken);
+                                } else {
+                                    console.log('No registration token available. Request permission to generate one.');
+                                }
+                            } else {
+                                console.log('Unable to get permission to notify.');
+                            }
+                        } catch (err) {
+                            console.log('An error occurred while retrieving token. ', err);
+                        }
+                    });
+
+                    // Handle incoming messages
+                    onMessage(messaging, (payload) => {
+                        console.log('Message received. ', payload);
+                        // Display the message in the UI
+                        const notificationTitle = payload.notification.title;
+                        const notificationOptions = {
+                            body: payload.notification.body,
+                            icon: payload.notification.icon
+                        };
+                        new Notification(notificationTitle, notificationOptions);
+                    });
+                })
+                .catch((error) => {
+                    console.error('Service Worker registration failed:', error);
+                });
+        } else {
+            console.error('Service Workers are not supported in this browser.');
+        }
+
+        // Function to send the token to your server
+        function sendTokenToServer(token) {
+            // You can use fetch or XMLHttpRequest to send the token to your server
+            console.log('Sending token to server...');
+            // Example using fetch:
+            fetch('/save-token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token: token }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
